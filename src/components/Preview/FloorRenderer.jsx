@@ -14,13 +14,8 @@ const FloorRenderer = ({ floor }) => {
 
     const floorTypeOption = FLOOR_TYPE_OPTIONS.find((opt) => opt.value === floor.type);
 
-    // 如果是导航栏类型,直接渲染导航栏
-    if (floor.type === 'navbar') {
-        return <NavbarRenderer floor={floor} />;
-    }
-
-    // 过滤出应该显示的图片
-    const visibleImages = floor.images.filter(shouldShowImage);
+    // 过滤出应该显示的图片 (对于navbar类型,images可能为undefined,使用空数组)
+    const visibleImages = floor.images ? floor.images.filter(shouldShowImage) : [];
 
     // 自动轮播
     useEffect(() => {
@@ -43,6 +38,12 @@ const FloorRenderer = ({ floor }) => {
             setCurrentImageIndex(0);
         }
     }, [visibleImages.length, currentImageIndex]);
+
+    // 如果是导航栏类型,直接渲染导航栏 (在所有hooks调用之后)
+    if (floor.type === 'navbar') {
+        return <NavbarRenderer floor={floor} />;
+    }
+
 
     if (visibleImages.length === 0) {
         return (

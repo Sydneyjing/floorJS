@@ -7,6 +7,7 @@ import {
     sortByPriority,
     sortByOrder,
 } from '../utils/dataTransform';
+import { DEFAULT_NAVBAR_CONFIG } from '../types';
 import dayjs from 'dayjs';
 
 // 创建初始页面配置
@@ -91,15 +92,7 @@ export const useFloorStore = create()(
                     createdAt: getCurrentTimeString(),
                     updatedAt: getCurrentTimeString(),
                     // 如果是导航栏类型,初始化默认配置
-                    navbarConfig: data.type === 'navbar' ? {
-                        position: 'bottom',
-                        height: 56,
-                        backgroundColor: '#FFFFFF',
-                        textColor: '#666666',
-                        activeColor: '#1890ff',
-                        iconSize: 24,
-                        items: [],
-                    } : undefined,
+                    navbarConfig: data.type === 'navbar' ? { ...DEFAULT_NAVBAR_CONFIG } : undefined,
                 };
 
                 set((state) => ({

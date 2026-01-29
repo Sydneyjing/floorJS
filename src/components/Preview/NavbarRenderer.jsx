@@ -27,33 +27,45 @@ const NavbarRenderer = ({ floor }) => {
 
     return (
         <div className="navbar-renderer" style={navbarStyle}>
-            {items.map((item, index) => (
-                <div
-                    key={item.id}
-                    className="navbar-item"
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '4px',
-                        cursor: 'pointer',
-                        color: index === 0 ? activeColor : textColor, // 模拟第一个为选中态
-                    }}
-                >
-                    <img
-                        src={index === 0 && item.activeIcon ? item.activeIcon : item.icon}
-                        alt={item.text}
+            {items && items.length > 0 ? (
+                items.map((item, index) => (
+                    <div
+                        key={item.id}
+                        className="navbar-item"
                         style={{
-                            width: `${iconSize}px`,
-                            height: `${iconSize}px`,
-                            objectFit: 'contain',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '4px',
+                            cursor: 'pointer',
+                            color: index === 0 ? activeColor : textColor, // 模拟第一个为选中态
                         }}
-                    />
-                    <span style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>
-                        {item.text}
-                    </span>
+                    >
+                        <img
+                            src={index === 0 && item.activeIcon ? item.activeIcon : item.icon}
+                            alt={item.text}
+                            style={{
+                                width: `${iconSize}px`,
+                                height: `${iconSize}px`,
+                                objectFit: 'contain',
+                            }}
+                        />
+                        <span style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>
+                            {item.text}
+                        </span>
+                    </div>
+                ))
+            ) : (
+                <div style={{
+                    width: '100%',
+                    textAlign: 'center',
+                    padding: '16px',
+                    color: '#999',
+                    fontSize: '14px'
+                }}>
+                    暂无导航项
                 </div>
-            ))}
+            )}
         </div>
     );
 };
