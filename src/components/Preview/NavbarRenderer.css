@@ -1,0 +1,13 @@
+.navbar-renderer {
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.navbar-item {
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.navbar-item:hover {
+    opacity: 0.8;
+}

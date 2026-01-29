@@ -1,0 +1,61 @@
+.floor-renderer {
+    position: relative;
+    width: 100%;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.floor-renderer-carousel {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+.floor-renderer-link {
+    display: block;
+    width: 100%;
+}
+
+.floor-renderer-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.floor-renderer-link:hover .floor-renderer-image {
+    transform: scale(1.02);
+}
+
+.floor-renderer-indicators {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 10;
+}
+
+.floor-renderer-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.floor-renderer-indicator:hover {
+    background: rgba(255, 255, 255, 0.8);
+    transform: scale(1.2);
+}
+
+.floor-renderer-indicator.active {
+    background: #fff;
+    width: 24px;
+    border-radius: 4px;
+}
