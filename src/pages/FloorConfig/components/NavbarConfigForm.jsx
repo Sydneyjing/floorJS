@@ -1,7 +1,8 @@
 import React from 'react';
-import { Form, Input, InputNumber, Select, ColorPicker, Space, Card } from 'antd';
+import { Form, InputNumber, Select, ColorPicker, Space, Card } from 'antd';
 import { useFloorStore } from '../../../store/useFloorStore';
 import { NAVBAR_POSITION_OPTIONS } from '../../../types';
+import ImageUpload from '../../../components/common/ImageUpload';
 
 /**
  * 导航栏配置表单组件
@@ -56,12 +57,14 @@ const NavbarConfigForm = ({ channel, floorId }) => {
                     />
                 </Form.Item>
 
-                <Form.Item label="背景图URL（可选）">
-                    <Input
+                <Form.Item label="背景图（可选）">
+                    <ImageUpload
                         value={navbarConfig.backgroundImage}
-                        placeholder="https://..."
-                        onChange={(e) => handleConfigChange('backgroundImage', e.target.value)}
-                        allowClear
+                        onChange={(url) => handleConfigChange('backgroundImage', url)}
+                        maxWidth={null}
+                        maxHeight={null}
+                        maxSize={500}
+                        placeholder="点击上传背景图"
                     />
                 </Form.Item>
 

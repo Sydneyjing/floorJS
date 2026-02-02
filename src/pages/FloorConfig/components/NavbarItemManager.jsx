@@ -38,6 +38,7 @@ import {
 } from '@ant-design/icons';
 import { useFloorStore } from '../../../store/useFloorStore';
 import { ACTION_TYPE_OPTIONS } from '../../../types';
+import ImageUpload from '../../../components/common/ImageUpload';
 
 /**
  * 单个导航项组件
@@ -249,18 +250,28 @@ const NavbarItemManager = ({ channel, floorId }) => {
                             </Form.Item>
 
                             <Form.Item
-                                label="图标URL"
+                                label="图标"
                                 name="icon"
-                                rules={[{ required: true, message: '请输入图标地址' }]}
+                                rules={[{ required: true, message: '请上传图标' }]}
                             >
-                                <Input placeholder="https://..." />
+                                <ImageUpload
+                                    maxWidth={null}
+                                    maxHeight={null}
+                                    maxSize={500}
+                                    placeholder="点击上传图标"
+                                />
                             </Form.Item>
 
                             <Form.Item
-                                label="选中态图标URL（可选）"
+                                label="选中态图标（可选）"
                                 name="activeIcon"
                             >
-                                <Input placeholder="https://..." />
+                                <ImageUpload
+                                    maxWidth={null}
+                                    maxHeight={null}
+                                    maxSize={500}
+                                    placeholder="点击上传图标"
+                                />
                             </Form.Item>
 
                             <Form.Item

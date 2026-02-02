@@ -19,7 +19,6 @@ import { CSS } from '@dnd-kit/utilities';
 import {
     Button,
     Space,
-    Input,
     Image,
     Popconfirm,
     Empty,
@@ -29,7 +28,9 @@ import {
     DatePicker,
     Form,
     Tag,
+    Input,
 } from 'antd';
+import ImageUpload from '../../../components/common/ImageUpload';
 import {
     PlusOutlined,
     DeleteOutlined,
@@ -274,11 +275,16 @@ const ImageManager: React.FC<ImageManagerProps> = ({ channel, floorId }) => {
                             autoComplete="off"
                         >
                             <Form.Item
-                                label="图片地址"
+                                label="图片"
                                 name="url"
-                                rules={[{ required: true, message: '请输入图片地址' }]}
+                                rules={[{ required: true, message: '请上传图片' }]}
                             >
-                                <Input placeholder="https://..." />
+                                <ImageUpload
+                                    maxWidth={null}
+                                    maxHeight={null}
+                                    maxSize={500}
+                                    placeholder="点击上传图片"
+                                />
                             </Form.Item>
 
                             <Form.Item
