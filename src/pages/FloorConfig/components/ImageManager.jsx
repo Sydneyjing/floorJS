@@ -7,7 +7,6 @@ import {
     useSensor,
     useSensors,
 } from '@dnd-kit/core';
-import type { DragEndEvent } from '@dnd-kit/core';
 import {
     arrayMove,
     SortableContext,
@@ -19,16 +18,18 @@ import { CSS } from '@dnd-kit/utilities';
 import {
     Button,
     Space,
-    Input,
     Image,
     Popconfirm,
     Empty,
     message,
     Card,
     Select,
+    DatePicker,
     Form,
     Tag,
+    Input,
 } from 'antd';
+import ImageUpload from '../../../components/common/ImageUpload';
 import {
     PlusOutlined,
     DeleteOutlined,
@@ -38,21 +39,12 @@ import {
     CloseOutlined,
 } from '@ant-design/icons';
 import { useFloorStore } from '../../../store/useFloorStore';
-import type { Channel, NavbarItem } from '../../../types';
-import { ACTION_TYPE_OPTIONS } from '../../../types';
+import { ACTION_TYPE_OPTIONS, USER_TAG_OPTIONS } from '../../../types';
+import dayjs from 'dayjs';
 
-interface NavbarItemManagerProps {
-    channel: Channel;
-    floorId: string;
-}
+const { RangePicker } = DatePicker;
 
-interface NavbarItemProps {
-    item: NavbarItem;
-    onEdit: (item: NavbarItem) => void;
-    onDelete: (itemId: string) => void;
-}
-
-const NavbarItemComponent: React.FC<NavbarItemProps> = ({ item, onEdit, onDelete }) => {
+const ImageItem = ({ image, onEdit, onDelete }) => {
     const {
         attributes,
         listeners,
@@ -60,14 +52,14 @@ const NavbarItemComponent: React.FC<NavbarItemProps> = ({ item, onEdit, onDelete
         transform,
         transition,
         isDragging,
-    } = useSortable({ id: item.id });
+    } = useSortable({ id: image.id });
 
     const style = {
         transform: CSS.Transform.toString(transform),
         transition,
     };
 
-    const actionTypeLabel = ACTION_TYPE_OPTIONS.find(opt => opt.value === item.action.type)?.label || '未知';
+    const actionTypeLabel = ACTION_TYPE_OPTIONS.find(opt => opt.value === image.action?.type)?.label || '未知';
 
     return (
         <div
@@ -83,8 +75,8 @@ const NavbarItemComponent: React.FC<NavbarItemProps> = ({ item, onEdit, onDelete
                 <HolderOutlined />
             </div>
             <Image
-                src={item.icon}
-                alt={item.text}
+                src={image.url}
+                alt={image.alt}
                 className="image-manager-item-preview"
                 preview={{
                     mask: <div>预览</div>,
@@ -92,27 +84,38 @@ const NavbarItemComponent: React.FC<NavbarItemProps> = ({ item, onEdit, onDelete
             />
             <div className="image-manager-item-info">
                 <div style={{ marginBottom: 4 }}>
-                    <Tag color="blue">{item.text}</Tag>
-                    <Tag color="green">{actionTypeLabel}</Tag>
+                    <Tag color="blue">{actionTypeLabel}</Tag>
+                    {image.action?.type !== 'none' && (
+                        <span style={{ fontSize: 12, color: '#666' }}>
+                            {image.action?.targetUrl}
+                        </span>
+                    )}
                 </div>
-                {item.action.type !== 'none' && (
-                    <div style={{ color: '#666', fontSize: 12 }}>
-                        {item.action.targetUrl}
+                {image.strategy?.targetTags && image.strategy.targetTags.length > 0 && (
+                    <div style={{ marginBottom: 4 }}>
+                        {image.strategy.targetTags.map(tag => (
+                            <Tag key={tag} color="gold" style={{ fontSize: 11 }}>
+                                {USER_TAG_OPTIONS.find(opt => opt.value === tag)?.label || tag}
+                            </Tag>
+                        ))}
                     </div>
                 )}
+                <div style={{ color: '#999', fontSize: 12 }}>
+                    {image.alt || '无描述'}
+                </div>
             </div>
             <div className="image-manager-item-actions">
                 <Button
                     type="text"
                     size="small"
                     icon={<EditOutlined />}
-                    onClick={() => onEdit(item)}
+                    onClick={() => onEdit(image)}
                 >
                     编辑
                 </Button>
                 <Popconfirm
-                    title="确定删除此导航项吗？"
-                    onConfirm={() => onDelete(item.id)}
+                    title="确定删除此图片吗？"
+                    onConfirm={() => onDelete(image.id)}
                     okText="确定"
                     cancelText="取消"
                 >
@@ -130,20 +133,20 @@ const NavbarItemComponent: React.FC<NavbarItemProps> = ({ item, onEdit, onDelete
     );
 };
 
-const NavbarItemManager: React.FC<NavbarItemManagerProps> = ({ channel, floorId }) => {
+const ImageManager = ({ channel, floorId }) => {
     const {
         getFloorById,
-        addNavbarItem,
-        updateNavbarItem,
-        deleteNavbarItem,
-        reorderNavbarItems,
+        addImageToFloor,
+        updateFloorImage,
+        deleteFloorImage,
+        reorderFloorImages,
     } = useFloorStore();
 
     const floor = getFloorById(channel, floorId);
-    const items = floor?.navbarConfig?.items || [];
+    const images = floor?.images || [];
 
     const [isAdding, setIsAdding] = useState(false);
-    const [editingItem, setEditingItem] = useState<NavbarItem | null>(null);
+    const [editingImage, setEditingImage] = useState(null);
     const [form] = Form.useForm();
 
     const sensors = useSensors(
@@ -153,41 +156,44 @@ const NavbarItemManager: React.FC<NavbarItemManagerProps> = ({ channel, floorId 
         })
     );
 
-    const handleDragEnd = (event: DragEndEvent) => {
+    const handleDragEnd = (event) => {
         const { active, over } = event;
 
         if (over && active.id !== over.id) {
-            const oldIndex = items.findIndex((item) => item.id === active.id);
-            const newIndex = items.findIndex((item) => item.id === over.id);
+            const oldIndex = images.findIndex((img) => img.id === active.id);
+            const newIndex = images.findIndex((img) => img.id === over.id);
 
-            const reorderedItems = arrayMove(items, oldIndex, newIndex);
-            const itemIds = reorderedItems.map((item) => item.id);
-            reorderNavbarItems(channel, floorId, itemIds);
+            const reorderedImages = arrayMove(images, oldIndex, newIndex);
+            const imageIds = reorderedImages.map((img) => img.id);
+            reorderFloorImages(channel, floorId, imageIds);
         }
     };
 
     const handleAdd = () => {
-        if (items.length >= 5) {
-            message.warning('导航项数量已达上限（5个）');
-            return;
-        }
         setIsAdding(true);
-        setEditingItem(null);
+        setEditingImage(null);
         form.resetFields();
         form.setFieldsValue({
             actionType: 'none',
+            targetTags: [],
         });
     };
 
-    const handleEdit = (item: NavbarItem) => {
-        setEditingItem(item);
+    const handleEdit = (image) => {
+        setEditingImage(image);
         setIsAdding(false);
         form.setFieldsValue({
-            icon: item.icon,
-            activeIcon: item.activeIcon,
-            text: item.text,
-            actionType: item.action.type,
-            targetUrl: item.action.targetUrl,
+            url: image.url,
+            alt: image.alt,
+            actionType: image.action.type,
+            targetUrl: image.action.targetUrl,
+            timeRange: image.strategy.timeRange ? [
+                dayjs(image.strategy.timeRange[0]),
+                dayjs(image.strategy.timeRange[1])
+            ] : null,
+            targetTags: image.strategy.targetTags,
+            clickId: image.tracking?.clickId,
+            exposureId: image.tracking?.exposureId,
         });
     };
 
@@ -195,26 +201,37 @@ const NavbarItemManager: React.FC<NavbarItemManagerProps> = ({ channel, floorId 
         try {
             const values = await form.validateFields();
 
-            const itemData = {
-                icon: values.icon,
-                activeIcon: values.activeIcon,
-                text: values.text,
+            const formData = {
+                url: values.url,
+                alt: values.alt || '',
                 action: {
                     type: values.actionType,
                     targetUrl: values.actionType !== 'none' ? values.targetUrl : undefined,
                 },
+                strategy: {
+                    priority: 1,
+                    timeRange: values.timeRange ? [
+                        values.timeRange[0].format('YYYY-MM-DD HH:mm:ss'),
+                        values.timeRange[1].format('YYYY-MM-DD HH:mm:ss')
+                    ] : null,
+                    targetTags: values.targetTags || [],
+                },
+                tracking: (values.clickId || values.exposureId) ? {
+                    clickId: values.clickId,
+                    exposureId: values.exposureId,
+                } : undefined,
             };
 
-            if (editingItem) {
-                updateNavbarItem(channel, floorId, editingItem.id, itemData);
+            if (editingImage) {
+                updateFloorImage(channel, floorId, editingImage.id, formData);
                 message.success('更新成功');
             } else {
-                addNavbarItem(channel, floorId, itemData);
+                addImageToFloor(channel, floorId, formData);
                 message.success('添加成功');
             }
 
             setIsAdding(false);
-            setEditingItem(null);
+            setEditingImage(null);
             form.resetFields();
         } catch (error) {
             console.error('表单验证失败:', error);
@@ -223,12 +240,12 @@ const NavbarItemManager: React.FC<NavbarItemManagerProps> = ({ channel, floorId 
 
     const handleCancel = () => {
         setIsAdding(false);
-        setEditingItem(null);
+        setEditingImage(null);
         form.resetFields();
     };
 
-    const handleDelete = (itemId: string) => {
-        deleteNavbarItem(channel, floorId, itemId);
+    const handleDelete = (imageId) => {
+        deleteFloorImage(channel, floorId, imageId);
         message.success('删除成功');
     };
 
@@ -237,34 +254,31 @@ const NavbarItemManager: React.FC<NavbarItemManagerProps> = ({ channel, floorId 
     return (
         <div className="image-manager">
             <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                {(isAdding || editingItem) && (
-                    <Card size="small" title={editingItem ? '编辑导航项' : '添加导航项'}>
+                {(isAdding || editingImage) && (
+                    <Card size="small" title={editingImage ? '编辑图片' : '添加图片'}>
                         <Form
                             form={form}
                             layout="vertical"
                             autoComplete="off"
                         >
                             <Form.Item
-                                label="导航项文字"
-                                name="text"
-                                rules={[{ required: true, message: '请输入导航项文字' }]}
+                                label="图片"
+                                name="url"
+                                rules={[{ required: true, message: '请上传图片' }]}
                             >
-                                <Input placeholder="例如：首页" maxLength={4} />
+                                <ImageUpload
+                                    maxWidth={null}
+                                    maxHeight={null}
+                                    maxSize={500}
+                                    placeholder="点击上传图片"
+                                />
                             </Form.Item>
 
                             <Form.Item
-                                label="图标URL"
-                                name="icon"
-                                rules={[{ required: true, message: '请输入图标地址' }]}
+                                label="图片描述"
+                                name="alt"
                             >
-                                <Input placeholder="https://..." />
-                            </Form.Item>
-
-                            <Form.Item
-                                label="选中态图标URL（可选）"
-                                name="activeIcon"
-                            >
-                                <Input placeholder="https://..." />
+                                <Input placeholder="图片描述（可选）" />
                             </Form.Item>
 
                             <Form.Item
@@ -296,6 +310,51 @@ const NavbarItemManager: React.FC<NavbarItemManagerProps> = ({ channel, floorId 
                                 </Form.Item>
                             )}
 
+                            <Form.Item
+                                label="生效时间"
+                                name="timeRange"
+                            >
+                                <RangePicker
+                                    showTime
+                                    format="YYYY-MM-DD HH:mm:ss"
+                                    style={{ width: '100%' }}
+                                    placeholder={['开始时间', '结束时间']}
+                                />
+                            </Form.Item>
+
+                            <Form.Item
+                                label="目标客群标签"
+                                name="targetTags"
+                            >
+                                <Select
+                                    mode="multiple"
+                                    placeholder="选择目标客群（可选）"
+                                    options={USER_TAG_OPTIONS.map(opt => ({
+                                        value: opt.value,
+                                        label: opt.label,
+                                    }))}
+                                />
+                            </Form.Item>
+
+                            <Form.Item
+                                label="埋点配置（可选）"
+                            >
+                                <Space direction="vertical" style={{ width: '100%' }}>
+                                    <Form.Item
+                                        name="clickId"
+                                        noStyle
+                                    >
+                                        <Input placeholder="点击监测ID" />
+                                    </Form.Item>
+                                    <Form.Item
+                                        name="exposureId"
+                                        noStyle
+                                    >
+                                        <Input placeholder="曝光监测ID" />
+                                    </Form.Item>
+                                </Space>
+                            </Form.Item>
+
                             <Form.Item>
                                 <Space>
                                     <Button
@@ -314,33 +373,32 @@ const NavbarItemManager: React.FC<NavbarItemManagerProps> = ({ channel, floorId 
                     </Card>
                 )}
 
-                {!isAdding && !editingItem && (
+                {!isAdding && !editingImage && (
                     <Button
                         type="dashed"
                         icon={<PlusOutlined />}
                         onClick={handleAdd}
                         block
-                        disabled={items.length >= 5}
                     >
-                        添加导航项 ({items.length}/5)
+                        添加图片
                     </Button>
                 )}
 
-                {items.length > 0 ? (
+                {images.length > 0 ? (
                     <DndContext
                         sensors={sensors}
                         collisionDetection={closestCenter}
                         onDragEnd={handleDragEnd}
                     >
                         <SortableContext
-                            items={items.map((item) => item.id)}
+                            items={images.map((img) => img.id)}
                             strategy={verticalListSortingStrategy}
                         >
                             <div className="image-manager-list">
-                                {items.map((item) => (
-                                    <NavbarItemComponent
-                                        key={item.id}
-                                        item={item}
+                                {images.map((image) => (
+                                    <ImageItem
+                                        key={image.id}
+                                        image={image}
                                         onEdit={handleEdit}
                                         onDelete={handleDelete}
                                     />
@@ -349,11 +407,11 @@ const NavbarItemManager: React.FC<NavbarItemManagerProps> = ({ channel, floorId 
                         </SortableContext>
                     </DndContext>
                 ) : (
-                    !isAdding && <Empty description="暂无导航项" />
+                    !isAdding && <Empty description="暂无图片" />
                 )}
             </Space>
         </div>
     );
 };
 
-export default NavbarItemManager;
+export default ImageManager;

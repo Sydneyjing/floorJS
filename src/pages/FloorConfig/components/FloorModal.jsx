@@ -9,7 +9,6 @@ import {
     Space,
     message,
 } from 'antd';
-import type { Channel, FloorFormData } from '../../../types';
 import { FLOOR_TYPE_OPTIONS, CUSTOMER_SEGMENT_OPTIONS } from '../../../types';
 import { useFloorStore } from '../../../store/useFloorStore';
 import ImageManager from './ImageManager';
@@ -17,14 +16,7 @@ import NavbarConfigForm from './NavbarConfigForm';
 import NavbarItemManager from './NavbarItemManager';
 import dayjs from 'dayjs';
 
-interface FloorModalProps {
-    open: boolean;
-    channel: Channel;
-    floorId?: string;
-    onClose: () => void;
-}
-
-const FloorModal: React.FC<FloorModalProps> = ({
+const FloorModal = ({
     open,
     channel,
     floorId,
@@ -60,7 +52,7 @@ const FloorModal: React.FC<FloorModalProps> = ({
     const handleOk = async () => {
         try {
             const values = await form.validateFields();
-            const formData: FloorFormData = {
+            const formData = {
                 name: values.name,
                 type: values.type,
                 customerSegments: values.customerSegments,
@@ -194,7 +186,7 @@ const FloorModal: React.FC<FloorModalProps> = ({
         // 根据楼层类型动态添加第二个tab
         ...(floor && floor.type === 'navbar' ? [{
             key: 'navbar',
-            label: `导航栏配置`,
+            label: '导航栏配置',
             children: isEdit && floorId ? (
                 <>
                     <NavbarConfigForm channel={channel} floorId={floorId} />
